@@ -4,12 +4,10 @@
 #include <cmath>
 
 
-using namespace std::literals;
-using namespace svg;
-
 namespace {
 
-    Polyline CreateStar(Point center, double outer_rad, double inner_rad, int num_rays) {
+    svg::Polyline CreateStar(svg::Point center, double outer_rad, double inner_rad, int num_rays) {
+        using namespace svg;
         Polyline polyline;
         for (int i = 0; i <= num_rays; ++i) {
             double angle = 2 * M_PI * (i % num_rays) / num_rays;
@@ -20,29 +18,65 @@ namespace {
             angle += M_PI / num_rays;
             polyline.AddPoint({ center.x + inner_rad * sin(angle), center.y - inner_rad * cos(angle) });
         }
-
-        polyline.SetFillColor("red"s);
-        polyline.SetStrokeColor("black"s);
         return polyline;
     }
-
-    /*void DrawGreeting() {
-        Document doc;
-        doc.Add(Circle().SetCenter({ 20, 20 }).SetRadius(10));
-        doc.Add(Text()
-            .SetFontFamily("Verdana"s)
-            .SetPosition({ 35, 20 })
-            .SetOffset({ 0, 6 })
-            .SetFontSize(12)
-            .SetFontWeight("bold"s)
-            .SetData("Hello C++"s));
-        doc.Add(CreateStar({ 20, 50 }, 10, 5, 5));
-        doc.Render(std::cout);
-    }*/
 
 }  // namespace
 
 namespace shapes {
+
+    class Star : public svg::Drawable {
+    public:
+        Star(svg::Point center, double outer_radius, double inner_radius, int num_rays)
+            : center_(center)
+            , outer_radius_(outer_radius)
+            , inner_radius_(inner_radius)
+            , num_rays_(num_rays) {
+        }
+
+        void Draw(svg::ObjectContainer& container) const override {
+            using namespace std::literals;
+            container.Add(  //
+                CreateStar(center_, outer_radius_, inner_radius_, num_rays_)
+                .SetFillColor("red"s)
+                .SetStrokeColor("black"s));
+        }
+
+    private:
+        svg::Point center_;
+        double outer_radius_;
+        double inner_radius_;
+        int num_rays_;
+    };
+
+    class Snowman : public svg::Drawable {
+    public:
+        Snowman(svg::Point head_center, double head_radius)
+            : head_center_(head_center)
+            , head_radius_(head_radius) {
+        }
+
+        void Draw(svg::ObjectContainer& container) const override {
+            using namespace svg;
+            using namespace std::literals;
+
+            const auto base_circle = Circle().SetFillColor("rgb(240,240,240)"s).SetStrokeColor("black");
+            container.Add(  //
+                Circle(base_circle)
+                .SetCenter({ head_center_.x, head_center_.y + 5 * head_radius_ })
+                .SetRadius(2 * head_radius_));
+
+            container.Add(  //
+                Circle(base_circle)
+                .SetCenter({ head_center_.x, head_center_.y + 2 * head_radius_ })
+                .SetRadius(1.5 * head_radius_));
+            container.Add(Circle(base_circle).SetCenter(head_center_).SetRadius(head_radius_));
+        }
+
+    private:
+        svg::Point head_center_;
+        double head_radius_;
+    };
 
     class Triangle : public svg::Drawable {
     public:
@@ -61,57 +95,7 @@ namespace shapes {
         svg::Point p1_, p2_, p3_;
     };
 
-    class Star : public svg::Drawable {
-    public:
-        Star(svg::Point center, double outer_rad, double inner_rad, int num_rays)
-            :center_(center)
-            , outer_rad_(outer_rad)
-            , inner_rad_(inner_rad)
-            , num_rays_(num_rays) {
-        }
-
-        void Draw(svg::ObjectContainer& container) const override {
-            container.Add(CreateStar(center_, outer_rad_, inner_rad_, num_rays_));
-        }
-
-    private:
-        svg::Point center_;
-        double outer_rad_;
-        double inner_rad_;
-        int num_rays_;
-    };
-    class Snowman : public svg::Drawable {
-    public:
-        Snowman(svg::Point center, double rad)
-            :center_(center)
-            , rad_(rad) {
-        }
-
-        void Draw(svg::ObjectContainer& container) const override {
-            container.Add(svg::Circle()
-                .SetCenter({ center_.x, center_.y + (5 * rad_) })
-                .SetRadius(rad_ * 2)
-                .SetFillColor("rgb(240,240,240)"s)
-                .SetStrokeColor("black"s));
-            container.Add(svg::Circle()
-                .SetCenter({ center_.x, center_.y + (2 * rad_) })
-                .SetRadius(rad_ * 1.5)
-                .SetFillColor("rgb(240,240,240)"s)
-                .SetStrokeColor("black"s));
-            container.Add(svg::Circle()
-                .SetCenter(center_)
-                .SetRadius(rad_)
-                .SetFillColor("rgb(240,240,240)"s)
-                .SetStrokeColor("black"s));
-        }
-
-    private:
-        svg::Point center_;
-        double rad_;
-    };
-
-} // namespace shapes 
-
+}  // namespace shapes
 
 template <typename DrawableIterator>
 void DrawPicture(DrawableIterator begin, DrawableIterator end, svg::ObjectContainer& target) {
@@ -139,7 +123,7 @@ int main() {
     svg::Document doc;
     DrawPicture(picture, doc);
 
-    const Text base_text = 
+    const Text base_text =  //
         Text()
         .SetFontFamily("Verdana"s)
         .SetFontSize(12)
@@ -153,6 +137,5 @@ int main() {
         .SetStrokeWidth(3));
     doc.Add(Text{ base_text }.SetFillColor("red"s));
 
-    // Выводим полученный документ в stdout
     doc.Render(cout);
 }

@@ -8,6 +8,8 @@
 #include <string_view>
 #include <vector>
 
+#include <variant>
+
 namespace svg {
 
     namespace detail {
@@ -42,6 +44,57 @@ namespace svg {
 
     }  // namespace detail
 
+    struct Rgb {
+        Rgb() = default;
+        Rgb(uint8_t r, uint8_t g, uint8_t b)
+            : red(r)
+            , green(g)
+            , blue(b) {
+        }
+
+        uint8_t red = 0;
+        uint8_t green = 0;
+        uint8_t blue = 0;
+    };
+
+    struct Rgba {
+        Rgba() = default;
+        Rgba(uint8_t r, uint8_t g, uint8_t b, double a)
+            : red(r)
+            , green(g)
+            , blue(b)
+            , opacity(a) {
+        }
+
+        uint8_t red = 0;
+        uint8_t green = 0;
+        uint8_t blue = 0;
+        double opacity = 1.0;
+    };
+
+    using Color = std::variant<std::monostate, std::string, Rgb, Rgba>;
+
+    inline const Color NoneColor{};
+
+    std::ostream& operator<<(std::ostream& out, const Color& color);
+
+    //struct OstreamColorPrinter {
+    //    std::ostream& out;
+
+    //    void operator()(std::monostate) const {
+    //        out << "none"sv;
+    //    }
+    //    void operator()(std::string color) const {
+    //        out << color;
+    //    }
+    //    void operator()(svg::Rgb color) const {
+    //        out << "rgb(" << color.red << "," << color.green << "," << color.blue << ")";
+    //    }
+    //    void operator()(svg::Rgba color) const {
+    //        out << "rgba(" << color.red << "," << color.green << "," << color.blue << "," << color.opacity << ")";
+    //    }
+    //};
+
     struct Point {
         Point() = default;
         Point(double x, double y)
@@ -51,9 +104,6 @@ namespace svg {
         double x = 0;
         double y = 0;
     };
-
-    using Color = std::string;
-    inline const Color NoneColor{ "none" };
 
     /*
      * Вспомогательная структура, хранящая контекст для вывода SVG-документа с отступами.
@@ -148,7 +198,7 @@ namespace svg {
         void RenderAttrs(std::ostream& out) const {
             using detail::RenderOptionalAttr;
             using namespace std::literals;
-            RenderOptionalAttr(out, "fill"sv, fill_color_);
+            RenderOptionalAttr(out, " fill"sv, fill_color_); //в этой строке возможно лишний пробел!!!!!!!!!!!!!!!!!!
             RenderOptionalAttr(out, " stroke"sv, stroke_color_);
             RenderOptionalAttr(out, " stroke-width"sv, stroke_width_);
             RenderOptionalAttr(out, " stroke-linecap"sv, stroke_line_cap_);

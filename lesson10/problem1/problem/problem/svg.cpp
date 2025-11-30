@@ -4,6 +4,38 @@ namespace svg {
 
     using namespace std::literals;
 
+    std::ostream& operator<<(std::ostream& out, const Color& color)
+    {
+        //if (std::holds_alternative<std::monostate>(color)) {
+        //    out << "none";
+        //}
+        //else if (std::holds_alternative<std::string>(color)) {
+        //    out << get<std::string>(color);
+        //}
+        //else if (std::holds_alternative<Rgb>(color)) {
+        //    out << "rgb(" << get<Rgb>(color).red << "," << get<Rgb>(color).green << "," << get<Rgb>(color).blue << ")";
+        //}
+        //else if (std::holds_alternative<Rgba>(color)) {
+        //    out << "rgba(" << get<Rgba>(color).red << "," << get<Rgba>(color).green << "," << get<Rgba>(color).blue << "," << get<Rgba>(color).opacity << ")";
+        //}
+        std::visit([&out](auto&& arg) {
+            using Type = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<Type, std::monostate>) {
+                out << "none";
+            }
+            else if constexpr (std::is_same_v<Type, std::string>) {
+                out << arg;
+            }
+            else if constexpr (std::is_same_v<Type, Rgb>) {
+                out << "rgb(" << static_cast<int>(arg.red) << "," << static_cast<int>(arg.green) << "," << static_cast<int>(arg.blue) << ")";
+            }
+            else if constexpr (std::is_same_v<Type, Rgba>) {
+                out << "rgba(" << static_cast<int>(arg.red) << "," << static_cast<int>(arg.green) << "," << static_cast<int>(arg.blue) << "," << arg.opacity << ")";
+            }
+            }, color);
+        return out;
+    }
+
     std::ostream& operator<<(std::ostream& out, StrokeLineCap value) {
         std::string_view sv;
         switch (value) {
